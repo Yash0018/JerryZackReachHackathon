@@ -1,108 +1,258 @@
 "reach 0.1";
 
 const SignedContract = Struct([
-  ["id", UInt],
   ["cost", UInt],
   ["insurPeriod", UInt],
   ["start", UInt],
-  ["isEnded", Bool],
-  ["isClaimed", Bool],
-  ["isApproved", Bool],
-  ["insurProceed", UInt],
 ]);
 
-const ProvidedContract = Struct([
-  // ["contractId", UInt],
-  ["cost", UInt],
-  ["insurPeriod", UInt],
-  ["insurProceed", UInt],
-  ["usageCount", UInt],
+const Opts = Struct([
+  ["claimsBalance", UInt],
+  ["acceptedToken", Token],
+  ["contractIsRunning", Bool],
 ]);
-
-const Opts = Struct([["acceptedToken", Token]]);
 
 export const main = Reach.App(() => {
   const Deployer = Participant("Deployer", {
     opts: Opts,
-    approve: Fun([], Bool),
+    stopContract: Fun([], Null),
+    log: Fun(true, Null),
+  });
+  const InsureCompany = API("InsureCompany", {
+    approveRequest: Fun([UInt, UInt], Bool),
   });
   const Customer = API("Customer", {
-    pay: Fun([UInt, UInt], SignedContract),
+    pay: Fun([UInt, UInt, UInt], SignedContract),
     claim: Fun([UInt], UInt),
   });
   const V = View("View", {
-    done: Bool,
+    durations: Array(UInt, 3),
+    correspondingPrice: Array(UInt, 3),
+    claimersCount: UInt,
+    claimers: Array(Address, 3),
   });
   init();
 
   Deployer.only(() => {
     const opts = declassify(interact.opts);
-    const { acceptedToken } = opts;
+    const { acceptedToken, claimsBalance, contractIsRunning } = opts;
   });
-  Deployer.publish(opts, acceptedToken);
+  Deployer.publish(opts, acceptedToken, claimsBalance, contractIsRunning);
   commit();
 
-  Deployer.pay([[0, acceptedToken]]);
-  const providedContract_1 = ProvidedContract.fromObject({
-    cost: 5,
-    insurPeriod: 30,
-    insurProceed: 5,
-    usageCount: 0,
-  });
-  // const providedContracts = new Map(UInt, ProvidedContract);
-  const signedContracts = new Map(SignedContract);
+  Deployer.pay([0, [claimsBalance, acceptedToken]]);
 
-  //array(SignedContract, []),
-  const [done] = parallelReduce([false])
+  const userCurrStart = new Map(UInt);
+  const userCurrPeriod = new Map(UInt);
+  const userCurrCost = new Map(UInt);
+  const userCurrRequestedProceed = new Map(UInt);
+  const userCost = new Map(UInt);
+  const userInsureProceed = new Map(UInt);
+  //keep a list of all customers' and claimers' Addresses,
+  const customers = new Set();
+  const claimersAddresses = new Set();
+
+  const [
+    durations,
+    correspondingPrice,
+    totalCost,
+    remainingClaimsBalance,
+    claimsCount,
+    claimersCount,
+    claimers,
+  ] = parallelReduce([
+    array(UInt, [30, 90, 120]),
+    array(UInt, [5, 15, 20]),
+    0,
+    claimsBalance,
+    0,
+    0,
+    Array.replicate(3, Deployer),
+  ])
     .define(() => {
-      const lct = lastConsensusTime();
-      V.done.set(done);
+      const lcs = lastConsensusSecs();
+      V.durations.set(durations);
+      V.correspondingPrice.set(correspondingPrice);
+      V.claimersCount.set(claimersCount);
+      V.claimers.set(claimers);
     })
-    .invariant(true)
+    .invariant(
+      claimsCount >= claimersAddresses.Map.size() &&
+        claimersCount <= claimers.length &&
+        balance(acceptedToken) == totalCost + remainingClaimsBalance &&
+        balance() == 0
+    )
     .paySpec([acceptedToken])
-    .while(!done)
+    .while(contractIsRunning)
     .api(
       Customer.pay,
-      (amt, period) =>
+      (durationIndex, amt, period) =>
         assume(
-          amt >= providedContract_1.cost &&
-            period >= providedContract_1.insurPeriod
+          durationIndex < durations.length &&
+            amt >= correspondingPrice[durationIndex] &&
+            period >= durations[durationIndex],
+          "Check doesn't pass"
         ),
-      (amt, period) => [0, [amt, acceptedToken]],
-      (amt, period, k) => {
-        const newContract = SignedContract.fromObject({
-          id: 1,
-          cost: amt,
-          insurPeriod: period,
-          start: lct,
-          isEnded: false,
-          isClaimed: false,
-          isApproved: false,
-          insurProceed: 0,
-        });
-        signedContracts[this] = newContract;
-        k(newContract);
-        return [done];
+      (durationIndex, amt, period) => [0, [amt, acceptedToken]],
+      (durationIndex, amt, period, k) => {
+        Deployer.interact.log("Backend: start subscrbing a contract");
+        if (!customers.member(this)) {
+          customers.insert(this);
+        }
+
+        if (fromSome(userCurrStart[this], 0) != 0) {
+          k(
+            SignedContract.fromObject({
+              cost: fromSome(userCurrCost[this], 0),
+              insurPeriod: fromSome(userCurrPeriod[this], 0),
+              start: fromSome(userCurrStart[this], 0),
+            })
+          );
+        } else {
+          const newContract = SignedContract.fromObject({
+            cost: amt,
+            insurPeriod: period,
+            start: lcs,
+          });
+          userCurrStart[this] = lcs;
+          userCurrPeriod[this] = period;
+          userCurrCost[this] = amt;
+          userCost[this] = fromSome(userCost[this], 0) + amt;
+          k(newContract);
+        }
+        return [
+          durations,
+          correspondingPrice,
+          totalCost + amt,
+          remainingClaimsBalance,
+          claimsCount,
+          claimersCount,
+          claimers,
+        ];
       }
     )
     .api(
       Customer.claim,
+      (_) => {
+        assume(
+          claimersCount < claimers.length,
+          "Wait for the admin to process other cliams"
+        );
+        assume(
+          lastConsensusSecs() <=
+            fromSome(userCurrPeriod[this], 0) +
+              fromSome(userCurrStart[this], 0),
+          "Your insure period has passed"
+        );
+      },
       (_) => [0, [0, acceptedToken]],
-      (id, k) => {
-        k(1);
-        return [done];
+      (amt, k) => {
+        Deployer.interact.log("Backend: start claiming");
+        if (!claimersAddresses.member(this)) {
+          claimersAddresses.insert(this);
+        }
+        if (claimersCount < claimers.length) {
+          userCurrRequestedProceed[this] = amt;
+          const newClaimers = claimers.set(claimersCount, this);
+          k(amt);
+          return [
+            durations,
+            correspondingPrice,
+            totalCost,
+            remainingClaimsBalance,
+            claimsCount + 1,
+            claimersCount + 1,
+            newClaimers,
+          ];
+        } else {
+          k(0);
+          return [
+            durations,
+            correspondingPrice,
+            totalCost,
+            remainingClaimsBalance,
+            claimsCount + 1,
+            claimersCount,
+            claimers,
+          ];
+        }
+      }
+    )
+    .api(
+      InsureCompany.approveRequest,
+      (index, amt) => {
+        assume(
+          index < claimersCount,
+          "Index should not be greated than the number of claimers"
+        );
+        assume(Deployer == this, "Only admin is allowed to approve");
+        assume(
+          amt <= remainingClaimsBalance,
+          "Amount cannot exceed the remainning balance"
+        );
+      },
+      (index, amt) => [0, [0, acceptedToken]],
+      (index, amt, k) => {
+        Deployer.interact.log("Backend: start arpproving");
+        if (index < claimers.length) {
+          const claimer = claimers[index];
+          // claiming amount should less than 2, 3, 4 times of cost
+          if (
+            (fromSome(userCurrPeriod[claimer], 0) < durations[1] &&
+              amt <= 2 * fromSome(userCurrCost[claimer], 1)) ||
+            (fromSome(userCurrPeriod[claimer], 0) > durations[1] &&
+              fromSome(userCurrPeriod[claimer], 0) < durations[2] &&
+              amt <= 3 * fromSome(userCurrCost[claimer], 1)) ||
+            (fromSome(userCurrPeriod[claimer], 0) >= durations[2] &&
+              amt <= 4 * fromSome(userCurrCost[claimer], 1))
+          ) {
+            userCurrRequestedProceed[claimer] = 0;
+            userInsureProceed[claimer] =
+              fromSome(userInsureProceed[claimer], 0) + amt;
+            const newClaimers = claimers.set(index, Deployer);
+            claimersAddresses.remove(claimer);
+            const newRemainingBalance = remainingClaimsBalance - amt;
+            transfer([0, [amt, acceptedToken]]).to(claimer);
+            k(true);
+            return [
+              durations,
+              correspondingPrice,
+              totalCost,
+              newRemainingBalance,
+              claimsCount,
+              claimersCount - 1,
+              newClaimers,
+            ];
+          } else {
+            k(false);
+            return [
+              durations,
+              correspondingPrice,
+              totalCost,
+              remainingClaimsBalance,
+              claimsCount,
+              claimersCount,
+              claimers,
+            ];
+          }
+        } else {
+          k(false);
+          return [
+            durations,
+            correspondingPrice,
+            totalCost,
+            remainingClaimsBalance,
+            claimsCount,
+            claimersCount,
+            claimers,
+          ];
+        }
       }
     );
-  commit();
 
-  fork().case(
-    Deployer,
-    () => ({}),
-    (_) => 0,
-    () => {}
-  );
   transfer([[balance(acceptedToken), acceptedToken]]).to(Deployer);
   transfer(balance()).to(Deployer);
   commit();
+
   exit();
 });
