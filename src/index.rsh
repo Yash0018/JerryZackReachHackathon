@@ -20,6 +20,7 @@ export const main = Reach.App(() => {
   });
   const InsureCompany = API("InsureCompany", {
     approveRequest: Fun([UInt, UInt], Bool),
+    declineRequest: Fun([UInt], Bool),
   });
   const Customer = API("Customer", {
     pay: Fun([UInt, UInt, UInt], SignedContract),
@@ -30,6 +31,12 @@ export const main = Reach.App(() => {
     correspondingPrice: Array(UInt, 3),
     claimersCount: UInt,
     claimers: Array(Address, 3),
+    userCurrCost: Fun([Address], UInt),
+    userCurrStart: Fun([Address], UInt),
+    userCurrPeriod: Fun([Address], UInt),
+    userCurrRequestedProceed: Fun([Address], UInt),
+    lastClaimResult: Fun([Address], Bool),
+    userCost: Fun([Address], UInt),
   });
   init();
 
@@ -46,11 +53,27 @@ export const main = Reach.App(() => {
   const userCurrPeriod = new Map(UInt);
   const userCurrCost = new Map(UInt);
   const userCurrRequestedProceed = new Map(UInt);
+  const lastClaimResult = new Map(Bool);
   const userCost = new Map(UInt);
   const userInsureProceed = new Map(UInt);
   //keep a list of all customers' and claimers' Addresses,
   const customers = new Set();
   const claimersAddresses = new Set();
+
+  const lookupUserCost = (addr) => fromSome(userCost[addr], 0);
+  const lookupUserCurrCost = (addr) => fromSome(userCurrCost[addr], 0);
+  const lookupUserCurrStart = (addr) => fromSome(userCurrStart[addr], 0);
+  const lookupUserCurrPeriod = (addr) => fromSome(userCurrPeriod[addr], 0);
+  const lookupUserCurrRqtProceed = (addr) =>
+    fromSome(userCurrRequestedProceed[addr], 0);
+  const lookupLastClaimResult = (addr) =>
+    fromSome(lastClaimResult[addr], false);
+  V.userCost.set(lookupUserCost);
+  V.userCurrCost.set(lookupUserCurrCost);
+  V.userCurrStart.set(lookupUserCurrStart);
+  V.userCurrPeriod.set(lookupUserCurrPeriod);
+  V.userCurrRequestedProceed.set(lookupUserCurrRqtProceed);
+  V.lastClaimResult.set(lookupLastClaimResult);
 
   const [
     durations,
@@ -61,7 +84,8 @@ export const main = Reach.App(() => {
     claimersCount,
     claimers,
   ] = parallelReduce([
-    array(UInt, [30, 90, 120]),
+    // 3 mins; 6 mins; 12 mins;
+    array(UInt, [180, 360, 720]),
     array(UInt, [5, 15, 20]),
     0,
     claimsBalance,
@@ -86,13 +110,18 @@ export const main = Reach.App(() => {
     .while(contractIsRunning)
     .api(
       Customer.pay,
-      (durationIndex, amt, period) =>
+      (durationIndex, amt, period) => {
         assume(
           durationIndex < durations.length &&
             amt >= correspondingPrice[durationIndex] &&
             period >= durations[durationIndex],
           "Check doesn't pass"
-        ),
+        );
+        assume(
+          lookupUserCurrStart(this) + lookupUserCurrPeriod(this) < lcs,
+          "You have subsribed one of the products"
+        );
+      },
       (durationIndex, amt, period) => [0, [amt, acceptedToken]],
       (durationIndex, amt, period, k) => {
         Deployer.interact.log("Backend: start subscrbing a contract");
@@ -198,15 +227,19 @@ export const main = Reach.App(() => {
           const claimer = claimers[index];
           // claiming amount should less than 2, 3, 4 times of cost
           if (
-            (fromSome(userCurrPeriod[claimer], 0) < durations[1] &&
+            (lookupUserCurrRqtProceed(claimer) < durations[1] &&
               amt <= 2 * fromSome(userCurrCost[claimer], 1)) ||
-            (fromSome(userCurrPeriod[claimer], 0) > durations[1] &&
+            (lookupUserCurrRqtProceed(claimer) > durations[1] &&
               fromSome(userCurrPeriod[claimer], 0) < durations[2] &&
               amt <= 3 * fromSome(userCurrCost[claimer], 1)) ||
-            (fromSome(userCurrPeriod[claimer], 0) >= durations[2] &&
+            (lookupUserCurrRqtProceed(claimer) >= durations[2] &&
               amt <= 4 * fromSome(userCurrCost[claimer], 1))
           ) {
+            userCurrCost[claimer] = 0;
+            userCurrStart[claimer] = 0;
+            userCurrPeriod[claimer] = 0;
             userCurrRequestedProceed[claimer] = 0;
+            lastClaimResult[claimer] = true;
             userInsureProceed[claimer] =
               fromSome(userInsureProceed[claimer], 0) + amt;
             const newClaimers = claimers.set(index, Deployer);
@@ -235,6 +268,48 @@ export const main = Reach.App(() => {
               claimers,
             ];
           }
+        } else {
+          k(false);
+          return [
+            durations,
+            correspondingPrice,
+            totalCost,
+            remainingClaimsBalance,
+            claimsCount,
+            claimersCount,
+            claimers,
+          ];
+        }
+      }
+    )
+    .api(
+      InsureCompany.declineRequest,
+      (index) => {
+        assume(
+          index < claimersCount,
+          "Index should not be greated than the number of claimers"
+        );
+        assume(Deployer == this, "Only admin is allowed to approve");
+      },
+      (index) => [0, [0, acceptedToken]],
+      (index, k) => {
+        if (index < claimers.length) {
+          const claimer = claimers[index];
+          userCurrCost[claimer] = 0;
+          userCurrStart[claimer] = 0;
+          userCurrPeriod[claimer] = 0;
+          lastClaimResult[claimer] = false;
+          const newClaimers = claimers.set(index, Deployer);
+          k(true);
+          return [
+            durations,
+            correspondingPrice,
+            totalCost,
+            remainingClaimsBalance,
+            claimsCount,
+            claimersCount - 1,
+            newClaimers,
+          ];
         } else {
           k(false);
           return [
