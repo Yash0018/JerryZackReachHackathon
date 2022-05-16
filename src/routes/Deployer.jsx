@@ -237,48 +237,51 @@ function Deployer() {
   };
 
   return (
-    <div className="mt-3 text-center">
-      <h2>Welcome to Deployer Page</h2>
+    <div id="deployer" className="d-flex text-center">
+      <h1 className="mb-4">Welcome to Deployer Page</h1>
       {isConnected ? (
-        <div className="d-flex justify-content-center">
+        <div id="deployerdetails" className="d-flex justify-content-center">
           {isTokenDeployed ? (
             isContractDeployed ? (
-              <div style={{ width: "720px" }}>
-                <div>
-                  <label className="float-start">Token Info: </label>
-                  <p>{tokenId}</p>
+              <div className="form-group" style={{ width: "450px" }}>
+                <div className="mb-4">
+                  <label className="float-start">Token Information: </label>
+                  <p>{tokenId}</p><br/>
+                </div>
+                <div className="mb-4">
+                  <label className="float-start">Contract Information: </label>
+                  <p>{ctcInfo}</p> <br/>
                 </div>
                 <div>
-                  <label className="float-start">Contract Info: </label>
-                  <p>{ctcInfo}</p>
-                </div>
-                <div>
-                  <div>
+                  <div className="mb-4">
                     <label className="float-start">
                       Customer Account Phrase:{" "}
                     </label>
-                    <textarea
+                    <textarea className="form-control"
                       cols="50"
                       onChange={(e) => setCustomerPhrase(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label className="float-start">Amount: </label>
-                    <input
-                      type="number"
+                  <div className="mb-4">
+                    <label className="float-start">Amount: </label> <br/>
+                    <input className="form-control"
+                      type="number" min="1"
                       onChange={(e) => setTransferAmount(e.target.value)}
                     />
                   </div>
-                  <Button onClick={() => transferToken()}>
+                  <div className="mb-4">
+                  <Button className="transfertoken" onClick={() => transferToken()}>
                     Transfer Token
                   </Button>
-                  <br />
+                  </div>
+                  <div className="mb-4">
                   <Button
-                    className="mt-3"
+                    className="mt-3 refresh"
                     onClick={() => setIsRefreshed(!isRefreshed)}
-                  >
+                    >
                     Refresh
                   </Button>
+                  </div>
                   {isTableVisble ? (
                     <>
                       <div>Claimers</div>
@@ -327,44 +330,46 @@ function Deployer() {
                 </div>
               </div>
             ) : (
-              <div style={{ width: "720px" }}>
-                <div>
-                  <label className="float-start">Token Info: </label>
+              <div  className="form-group" style={{ width: "450px" }}>
+                <div className="mb-4">
+                  <label className="float-start">Token Information: </label>
                   <p>{tokenId}</p>
                 </div>
-                <div>
+                <div className="mb-4">
                   <label className="float-start">Claim Balance: </label>
-                  <input
-                    type="number"
+                  <input className="form-control"
+                    type="number" min='3000'
                     onChange={(e) => setClaimsBalance(e.target.value)}
                   />
-                </div>
-                <Button onClick={() => deplopyContract()}>
+                </div >
+                <div className="mb-4"> 
+                <Button className="deploycontract" onClick={() => deplopyContract()}>
                   Deploy Contract
                 </Button>
+                </div>
               </div>
             )
           ) : (
-            <div>
-              <div className="mb-5">
-                <Button onClick={() => deplopyToken()}>Deploy Token</Button>
+            <div style={{ width: "450px" }}>
+              <div className="mb-4">
+                <Button className="deploytoken" onClick={() => deplopyToken()}>Deploy Token</Button>
               </div>
-              <div>
-                <div className="mb-3">
-                  <label className="float-start">Token Info: </label>
-                  <input onChange={(e) => setTokenId(e.target.value)} />
+              <div className="mb-4 form-group">
+                <div className="mb-4">
+                  <label for="tokeninfo" className="float-start" >Token Information:</label> <br />
+                  <input id="tokeninfo" className="form-control" onChange={(e) => setTokenId(e.target.value)} />
                 </div>
-                <div>
-                  <label className="float-start">Contract Info: </label>
-                  <input onChange={(e) => setCtcInfo(e.target.value)} />
+                <div className="mb-4">
+                  <label for="contractinfo" className="float-start" >Contract Information: </label> <br />
+                  <input id="contractinfo" className="form-control" onChange={(e) => setCtcInfo(e.target.value)} />
                 </div>
-                <Button onClick={() => connectCtc()}>Connect Contract</Button>
+                <Button className="connectcontract" onClick={() => connectCtc()}>Connect Contract</Button>
               </div>
             </div>
           )}
         </div>
       ) : (
-        <Button onClick={() => connectWallet()}>Connect Wallet</Button>
+        <Button className="connectwallet" onClick={() => connectWallet()}>Connect Wallet</Button>
       )}
     </div>
   );

@@ -4,10 +4,10 @@ import { Button } from "@mui/material";
 
 function App() {
   return (
-    <div className="text-center">
-      <h1>Insure dApp</h1>
+    <div id="homepage" className="text-center d-flex">
+      <h1 className="mb-5">Insurance DApp</h1>
       <Link to="/deployer">
-        <Button variant="contained" className="mb-3">
+        <Button variant="contained" className="mb-4">
           Deployer
         </Button>
       </Link>

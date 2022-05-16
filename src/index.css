@@ -11,3 +11,38 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+#homepage{
+  flex-direction: column;
+  width: 330px;
+  height: 214px;
+  z-index: 15;
+  margin: 250px auto ;
+}
+
+#deployer{
+  flex-direction: column;
+  margin: 100px auto ;
+}
+
+.deployerdetails {
+  flex-direction: column;
+  width: 500px ;
+}
+
+.connectwallet, .deploytoken, .connectcontract, .deploycontract, .transfertoken, .refresh {
+  color: #fff !important;
+  background-color: #1976d2 !important;
+  width: 200px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: auto !important;
+}
+
+h1 {
+  font-weight: 700 !important;
+}
+
+body{
+  background-color:#ff7979 !important ;
+}
