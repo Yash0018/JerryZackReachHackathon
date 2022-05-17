@@ -195,7 +195,7 @@ function Customer() {
 
   return (
     <div id="customer" className="text-center d-flex w-50">
-      <h1>Customer</h1>
+      <h1 className="mb-4">Customer</h1>
       {isConnected ? (
         !canPayed ? (
           <div>
@@ -240,14 +240,14 @@ function Customer() {
               </>
             ) : (
               <>
-                <div className="mb-4">
-                  <label className="float-start">Claim Amount: </label>
-                  <input
+                <div className="mb-4 form-group">
+                  <label className="float-start"> <strong>Claim Amount: </strong> </label>
+                  <input className="form-control"
                     type="number"
                     onChange={(e) => setClaimAmount(e.target.value)}
                   />
                 </div>
-                <Button onClick={() => claim()}>Claim</Button>
+                <Button className="claim" onClick={() => claim()}>Claim</Button>
               </>
             )}
           </div>
@@ -266,9 +266,9 @@ function Customer() {
               </p>
             ) : null}
             <form onSubmit={handleSubmit}>
-              <FormControl>
-                <FormLabel className="mb-4">Product</FormLabel>
-                <RadioGroup
+              <FormControl className="align-items-center">
+                <FormLabel className="float-start align-items-center"><strong style={{color:"black !important"}}>Products:</strong></FormLabel>
+                <RadioGroup className="mb-4"
                   name="products-group"
                   onChange={(e) =>
                     setSelectedProduct(JSON.parse(e.target.value))

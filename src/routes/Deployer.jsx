@@ -399,12 +399,12 @@ function Deployer() {
                       </TableCell>
                       <TableCell align="center">{c.duration}</TableCell>
                       <TableCell align="center">
-                        <Button onClick={() => approveRequest(c)}>
+                        <Button className="approve" onClick={() => approveRequest(c)}>
                           Approve
                         </Button>
                       </TableCell>
                       <TableCell align="center">
-                        <Button onClick={() => declineRequest(c)}>
+                        <Button className="decline" onClick={() => declineRequest(c)}>
                           Decline
                         </Button>
                       </TableCell>

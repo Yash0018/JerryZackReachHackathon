@@ -30,7 +30,7 @@ code {
   width: 500px ;
 }
 
-.connectwallet, .deploytoken, .connectcontract, .deploycontract, .transfertoken, .refresh, .pay {
+.connectwallet, .deploytoken, .connectcontract, .deploycontract, .transfertoken, .refresh, .pay, .claim, .approve, .decline {
   color: #fff !important;
   background-color: #1976d2 !important;
   width: 200px !important;
@@ -49,4 +49,8 @@ body{
 
 textarea {
   height: 140px;
+}
+
+p span {
+  font-weight: bold;
 }
