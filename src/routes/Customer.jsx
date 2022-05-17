@@ -12,8 +12,10 @@ import {
   Radio,
   RadioGroup,
 } from "@mui/material";
+// utils
 import { ctcparse, pretty } from "utils/contract";
 import { toast } from "react-toastify";
+import moment from "moment";
 
 const PROVIDERENV = "LocalHost";
 const reach = loadStdlib("ALGO");
@@ -42,6 +44,7 @@ function Customer() {
   const [claimAmount, setClaimAmount] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState();
   const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshed, setIsRefreshed] = useState(false);
 
   const connectWallet = async () => {
     try {
@@ -106,13 +109,19 @@ function Customer() {
           ])),
         };
         console.log("Data: ", data);
-        const now = pretty(await reach.getNetworkTime());
-        console.log("Check: ", data?.userCurrStart + data?.userCurrPeriod, now);
+        setIsClaimed(false);
+        setCanPayed(true);
+        const now = pretty(await reach.getNetworkSecs());
+        console.log(
+          "Check: ",
+          Number(data?.userCurrStart) + Number(data?.userCurrPeriod),
+          now
+        );
         if (data?.userCost > 0) {
           setTotalCost(data.userCost);
           setLastClaimResult(data.lastClaimResult);
         }
-        if (data?.userCurrStart + data?.userCurrPeriod > now) {
+        if (Number(data?.userCurrStart) + Number(data?.userCurrPeriod) > now) {
           setCurrProduct({
             cost: data.userCurrCost,
             start: data.userCurrStart,
@@ -142,7 +151,7 @@ function Customer() {
     if (ctcCustomer) {
       getUserProductInfo();
     }
-  }, [ctcCustomer]);
+  }, [ctcCustomer, isRefreshed]);
 
   const api = async (name, ...args) => {
     console.log(`calling api: ${name}`);
@@ -160,6 +169,7 @@ function Customer() {
       const res = await api("pay", index, price, duration);
       console.log("Pay Res: ", res);
       setTokenBalance(tokenBalance - price);
+      setTotalCost(Number(totalCost) + Number(res.cost));
       setCurrProduct({
         cost: res.cost,
         start: res.start,
@@ -206,7 +216,7 @@ function Customer() {
             </p>
             <p>
               <span className="pr-2">Start Time: </span>
-              {currProduct.start}
+              {moment.unix(currProduct.start).format("DD-MM-YYYY hh:mm:ss")}
             </p>
             <p>
               <span className="pr-2">Duration: </span>
@@ -219,6 +229,14 @@ function Customer() {
                   {requestedProceed}
                 </p>
                 <p>Waiting Response from the Admin</p>
+                <div className="mb-4">
+                  <Button
+                    className="mt-3 refresh"
+                    onClick={() => setIsRefreshed(!isRefreshed)}
+                  >
+                    Refresh
+                  </Button>
+                </div>
               </>
             ) : (
               <>
