@@ -15,6 +15,7 @@ import {
 // utils
 import { ctcparse, pretty } from "utils/contract";
 import { toast } from "react-toastify";
+import moment from "moment";
 
 const PROVIDERENV = "LocalHost";
 const reach = loadStdlib("ALGO");
@@ -393,7 +394,9 @@ function Deployer() {
                       <TableCell align="center">{c.address}</TableCell>
                       <TableCell align="center">{c.requestedProceed}</TableCell>
                       <TableCell align="center">{c.cost}</TableCell>
-                      <TableCell align="center">{c.start}</TableCell>
+                      <TableCell align="center">
+                        {moment.unix(c.start).format("DD-MM-YYYY hh:mm:ss")}
+                      </TableCell>
                       <TableCell align="center">{c.duration}</TableCell>
                       <TableCell align="center">
                         <Button onClick={() => approveRequest(c)}>
