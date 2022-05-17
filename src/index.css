@@ -20,7 +20,7 @@ code {
   margin: 250px auto ;
 }
 
-#deployer{
+#deployer, #customer{
   flex-direction: column;
   margin: 100px auto ;
 }
@@ -30,7 +30,7 @@ code {
   width: 500px ;
 }
 
-.connectwallet, .deploytoken, .connectcontract, .deploycontract, .transfertoken, .refresh {
+.connectwallet, .deploytoken, .connectcontract, .deploycontract, .transfertoken, .refresh, .pay {
   color: #fff !important;
   background-color: #1976d2 !important;
   width: 200px !important;
@@ -45,4 +45,8 @@ h1 {
 
 body{
   background-color:#ff7979 !important ;
+}
+
+textarea {
+  height: 140px;
 }

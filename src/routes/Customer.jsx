@@ -184,62 +184,62 @@ function Customer() {
   };
 
   return (
-    <div className="text-center">
-      <h2>Customer</h2>
+    <div id="customer" className="text-center d-flex w-50">
+      <h1>Customer</h1>
       {isConnected ? (
         !canPayed ? (
           <div>
             <p>
-              <span className="pr-2">Token Balance: </span>$ {tokenBalance}
+              <span className="pr-2 mb-4">Token Balance: </span>$ {tokenBalance}
             </p>
             <p>
-              <span className="pr-2">Total Cost: </span>$ {totalCost}
+              <span className="pr-2 mb-4">Total Cost: </span>$ {totalCost}
             </p>
             {totalCost > 0 && lastClaimResult ? (
               <p>
-                <span className="pr-2">Last Claim Result: </span>
+                <span className="pr-2 mb-4">Last Claim Result: </span>
                 {lastClaimResult ? "Approved" : "Declined"}
               </p>
             ) : null}
             <p>
-              <span className="pr-2">Cost: </span>$ {currProduct.cost}
+              <span className="pr-2 mb-4">Cost: </span>$ {currProduct.cost}
             </p>
             <p>
-              <span className="pr-2">Start Time: </span>
+              <span className="pr-2 mb-4">Start Time: </span>
               {currProduct.start}
             </p>
             <p>
-              <span className="pr-2">Duration: </span>
+              <span className="pr-2 mb-4">Duration: </span>
               {currProduct.period / 60} Minutes
             </p>
             {isClaimed ? (
               <>
                 <p>
-                  <span className="pr-2">Requested Proceed: </span>${" "}
+                  <span className="pr-2 mb-4">Requested Proceed: </span>${" "}
                   {requestedProceed}
                 </p>
                 <p>Waiting Response from the Admin</p>
               </>
             ) : (
               <>
-                <div>
+                <div className="mb-4">
                   <label className="float-start">Claim Amount: </label>
                   <input
                     type="number"
                     onChange={(e) => setClaimAmount(e.target.value)}
                   />
                 </div>
-                <Button onClick={() => claim()}>Cliam</Button>
+                <Button onClick={() => claim()}>Claim</Button>
               </>
             )}
           </div>
         ) : (
           <>
             <p>
-              <span className="pr-2">Token Balance: </span>$ {tokenBalance}
+              <span className="pr-2 mb-4">Token Balance: </span>$ {tokenBalance}
             </p>
             <p>
-              <span className="pr-2">Total Cost: </span>$ {totalCost}
+              <span className="pr-2 mb-4">Total Cost: </span>$ {totalCost}
             </p>
             {totalCost > 0 && lastClaimResult ? (
               <p>
@@ -249,7 +249,7 @@ function Customer() {
             ) : null}
             <form onSubmit={handleSubmit}>
               <FormControl>
-                <FormLabel>Product</FormLabel>
+                <FormLabel className="mb-4">Product</FormLabel>
                 <RadioGroup
                   name="products-group"
                   onChange={(e) =>
@@ -265,7 +265,7 @@ function Customer() {
                     />
                   ))}
                 </RadioGroup>
-                <Button sx={{ mt: 1, mr: 1 }} type="submit" variant="outlined">
+                <Button className="pay" sx={{ mt: 1, mr: 1 }} type="submit" variant="outlined">
                   Pay
                 </Button>
               </FormControl>
@@ -273,16 +273,16 @@ function Customer() {
           </>
         )
       ) : (
-        <div>
-          <div className="mb-3">
-            <label className="float-start">Token Info: </label>
-            <input onChange={(e) => setTokenInfo(e.target.value)} />
+        <div className="form-group mb-4">
+          <div className="mb-4">
+            <label className="float-start">Token Information: </label>
+            <input className="form-control" onChange={(e) => setTokenInfo(e.target.value)} />
           </div>
-          <div>
-            <label className="float-start">Contract Info: </label>
-            <input onChange={(e) => setContractInfo(e.target.value)} />
+          <div className="mb-4">
+            <label className="float-start">Contract Information: </label>
+            <input className="form-control" onChange={(e) => setContractInfo(e.target.value)} />
           </div>
-          <Button onClick={() => connectWallet()}>Connect Wallet</Button>
+          <Button className="connectwallet" onClick={() => connectWallet()}>Connect Wallet</Button>
         </div>
       )}
     </div>
