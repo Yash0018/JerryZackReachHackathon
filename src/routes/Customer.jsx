@@ -198,7 +198,7 @@ function Customer() {
             {totalCost > 0 && lastClaimResult ? (
               <p>
                 <span className="pr-2">Last Claim Result: </span>
-                {lastClaimResult}
+                {lastClaimResult ? "Approved" : "Declined"}
               </p>
             ) : null}
             <p>
@@ -238,6 +238,15 @@ function Customer() {
             <p>
               <span className="pr-2">Token Balance: </span>$ {tokenBalance}
             </p>
+            <p>
+              <span className="pr-2">Total Cost: </span>$ {totalCost}
+            </p>
+            {totalCost > 0 && lastClaimResult ? (
+              <p>
+                <span className="pr-2">Last Claim Result: </span>
+                {lastClaimResult ? "Approved" : "Declined"}
+              </p>
+            ) : null}
             <form onSubmit={handleSubmit}>
               <FormControl>
                 <FormLabel>Product</FormLabel>

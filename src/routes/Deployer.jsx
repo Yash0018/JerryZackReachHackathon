@@ -237,141 +237,183 @@ function Deployer() {
   };
 
   return (
-    <div id="deployer" className="d-flex text-center">
-      <h1 className="mb-4">Welcome to Deployer Page</h1>
-      {isConnected ? (
-        <div id="deployerdetails" className="d-flex justify-content-center">
-          {isTokenDeployed ? (
-            isContractDeployed ? (
-              <div className="form-group" style={{ width: "450px" }}>
-                <div className="mb-4">
-                  <label className="float-start">Token Information: </label>
-                  <p>{tokenId}</p><br/>
-                </div>
-                <div className="mb-4">
-                  <label className="float-start">Contract Information: </label>
-                  <p>{ctcInfo}</p> <br/>
-                </div>
-                <div>
+    <>
+      <div id="deployer" className="d-flex text-center mb-3">
+        <h1 className="mb-4">Welcome to Deployer Page</h1>
+        {isConnected ? (
+          <div id="deployerdetails" className="d-flex justify-content-center">
+            {isTokenDeployed ? (
+              isContractDeployed ? (
+                <div className="form-group" style={{ width: "450px" }}>
+                  <div className="mb-4">
+                    <label className="float-start">Token Information: </label>
+                    <p>{tokenId}</p>
+                    <br />
+                  </div>
                   <div className="mb-4">
                     <label className="float-start">
-                      Customer Account Phrase:{" "}
+                      Contract Information:{" "}
                     </label>
-                    <textarea className="form-control"
-                      cols="50"
-                      onChange={(e) => setCustomerPhrase(e.target.value)}
+                    <p>{ctcInfo}</p> <br />
+                  </div>
+                  <div>
+                    <div className="mb-4">
+                      <label className="float-start">
+                        Customer Account Phrase:{" "}
+                      </label>
+                      <textarea
+                        className="form-control"
+                        cols="50"
+                        onChange={(e) => setCustomerPhrase(e.target.value)}
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="float-start">Amount: </label> <br />
+                      <input
+                        className="form-control"
+                        type="number"
+                        min="1"
+                        onChange={(e) => setTransferAmount(e.target.value)}
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <Button
+                        className="transfertoken"
+                        onClick={() => transferToken()}
+                      >
+                        Transfer Token
+                      </Button>
+                    </div>
+                    <div className="mb-4">
+                      <Button
+                        className="mt-3 refresh"
+                        onClick={() => setIsRefreshed(!isRefreshed)}
+                      >
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="form-group" style={{ width: "450px" }}>
+                  <div className="mb-4">
+                    <label className="float-start">Token Information: </label>
+                    <p>{tokenId}</p>
+                  </div>
+                  <div className="mb-4">
+                    <label className="float-start">Claim Balance: </label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min="3000"
+                      onChange={(e) => setClaimsBalance(e.target.value)}
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="float-start">Amount: </label> <br/>
-                    <input className="form-control"
-                      type="number" min="1"
-                      onChange={(e) => setTransferAmount(e.target.value)}
-                    />
-                  </div>
-                  <div className="mb-4">
-                  <Button className="transfertoken" onClick={() => transferToken()}>
-                    Transfer Token
-                  </Button>
-                  </div>
-                  <div className="mb-4">
-                  <Button
-                    className="mt-3 refresh"
-                    onClick={() => setIsRefreshed(!isRefreshed)}
+                    <Button
+                      className="deploycontract"
+                      onClick={() => deplopyContract()}
                     >
-                    Refresh
-                  </Button>
+                      Deploy Contract
+                    </Button>
                   </div>
-                  {isTableVisble ? (
-                    <>
-                      <div>Claimers</div>
-                      <Table sx={{ minWidth: 650 }}>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell align="center">Index</TableCell>
-                            <TableCell align="center">
-                              Claimer Address
-                            </TableCell>
-                            <TableCell align="center">Request Amount</TableCell>
-                            <TableCell align="center">Cost</TableCell>
-                            <TableCell align="center">Start Time</TableCell>
-                            <TableCell align="center">Duration</TableCell>
-                            <TableCell align="center"></TableCell>
-                            <TableCell align="center"></TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {claimers?.map((c, i) => (
-                            <TableRow key={i}>
-                              <TableCell align="center">{c.index}</TableCell>
-                              <TableCell align="center">{c.address}</TableCell>
-                              <TableCell align="center">
-                                {c.requestedProceed}
-                              </TableCell>
-                              <TableCell align="center">{c.cost}</TableCell>
-                              <TableCell align="center">{c.start}</TableCell>
-                              <TableCell align="center">{c.duration}</TableCell>
-                              <TableCell align="center">
-                                <Button onClick={() => approveRequest(c)}>
-                                  Approve
-                                </Button>
-                              </TableCell>
-                              <TableCell align="center">
-                                <Button onClick={() => declineRequest(c)}>
-                                  Decline
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </>
-                  ) : null}
                 </div>
-              </div>
+              )
             ) : (
-              <div  className="form-group" style={{ width: "450px" }}>
+              <div style={{ width: "450px" }}>
                 <div className="mb-4">
-                  <label className="float-start">Token Information: </label>
-                  <p>{tokenId}</p>
+                  <Button
+                    className="deploytoken"
+                    onClick={() => deplopyToken()}
+                  >
+                    Deploy Token
+                  </Button>
                 </div>
-                <div className="mb-4">
-                  <label className="float-start">Claim Balance: </label>
-                  <input className="form-control"
-                    type="number" min='3000'
-                    onChange={(e) => setClaimsBalance(e.target.value)}
-                  />
-                </div >
-                <div className="mb-4"> 
-                <Button className="deploycontract" onClick={() => deplopyContract()}>
-                  Deploy Contract
-                </Button>
+                <div className="mb-4 form-group">
+                  <div className="mb-4">
+                    <label for="tokeninfo" className="float-start">
+                      Token Information:
+                    </label>{" "}
+                    <br />
+                    <input
+                      id="tokeninfo"
+                      className="form-control"
+                      onChange={(e) => setTokenId(e.target.value)}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label for="contractinfo" className="float-start">
+                      Contract Information:{" "}
+                    </label>{" "}
+                    <br />
+                    <input
+                      id="contractinfo"
+                      className="form-control"
+                      onChange={(e) => setCtcInfo(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    className="connectcontract"
+                    onClick={() => connectCtc()}
+                  >
+                    Connect Contract
+                  </Button>
                 </div>
               </div>
-            )
-          ) : (
-            <div style={{ width: "450px" }}>
-              <div className="mb-4">
-                <Button className="deploytoken" onClick={() => deplopyToken()}>Deploy Token</Button>
-              </div>
-              <div className="mb-4 form-group">
-                <div className="mb-4">
-                  <label for="tokeninfo" className="float-start" >Token Information:</label> <br />
-                  <input id="tokeninfo" className="form-control" onChange={(e) => setTokenId(e.target.value)} />
-                </div>
-                <div className="mb-4">
-                  <label for="contractinfo" className="float-start" >Contract Information: </label> <br />
-                  <input id="contractinfo" className="form-control" onChange={(e) => setCtcInfo(e.target.value)} />
-                </div>
-                <Button className="connectcontract" onClick={() => connectCtc()}>Connect Contract</Button>
-              </div>
+            )}
+          </div>
+        ) : (
+          <Button className="connectwallet" onClick={() => connectWallet()}>
+            Connect Wallet
+          </Button>
+        )}
+      </div>
+      {isTableVisble ? (
+        <div className="text-center mb-5">
+          <h2>Claimers</h2>
+          <div className=" d-flex justify-content-center">
+            <div className="overflow-auto" style={{ width: "750px" }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">Index</TableCell>
+                    <TableCell align="center">Claimer Address</TableCell>
+                    <TableCell align="center">Request Amount</TableCell>
+                    <TableCell align="center">Cost</TableCell>
+                    <TableCell align="center">Start Time</TableCell>
+                    <TableCell align="center">Duration</TableCell>
+                    <TableCell align="center"></TableCell>
+                    <TableCell align="center"></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {claimers?.map((c, i) => (
+                    <TableRow key={i}>
+                      <TableCell align="center">{c.index}</TableCell>
+                      <TableCell align="center">{c.address}</TableCell>
+                      <TableCell align="center">{c.requestedProceed}</TableCell>
+                      <TableCell align="center">{c.cost}</TableCell>
+                      <TableCell align="center">{c.start}</TableCell>
+                      <TableCell align="center">{c.duration}</TableCell>
+                      <TableCell align="center">
+                        <Button onClick={() => approveRequest(c)}>
+                          Approve
+                        </Button>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button onClick={() => declineRequest(c)}>
+                          Decline
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          )}
+          </div>
         </div>
-      ) : (
-        <Button className="connectwallet" onClick={() => connectWallet()}>Connect Wallet</Button>
-      )}
-    </div>
+      ) : null}
+    </>
   );
 }
 
