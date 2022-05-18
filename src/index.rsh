@@ -94,7 +94,7 @@ export const main = Reach.App(() => {
     Array.replicate(3, Deployer),
   ])
     .define(() => {
-      const lcs = lastConsensusSecs();
+      const tcs = thisConsensusSecs();
       V.durations.set(durations);
       V.correspondingPrice.set(correspondingPrice);
       V.claimersCount.set(claimersCount);
@@ -118,7 +118,7 @@ export const main = Reach.App(() => {
           "Check doesn't pass"
         );
         assume(
-          lookupUserCurrStart(this) + lookupUserCurrPeriod(this) < lcs,
+          lookupUserCurrStart(this) + lookupUserCurrPeriod(this) < tcs,
           "You have subsribed one of the products"
         );
       },
@@ -129,26 +129,16 @@ export const main = Reach.App(() => {
           customers.insert(this);
         }
 
-        if (fromSome(userCurrStart[this], 0) != 0) {
-          k(
-            SignedContract.fromObject({
-              cost: fromSome(userCurrCost[this], 0),
-              insurPeriod: fromSome(userCurrPeriod[this], 0),
-              start: fromSome(userCurrStart[this], 0),
-            })
-          );
-        } else {
-          const newContract = SignedContract.fromObject({
-            cost: amt,
-            insurPeriod: period,
-            start: lcs,
-          });
-          userCurrStart[this] = lcs;
-          userCurrPeriod[this] = period;
-          userCurrCost[this] = amt;
-          userCost[this] = fromSome(userCost[this], 0) + amt;
-          k(newContract);
-        }
+        const newContract = SignedContract.fromObject({
+          cost: amt,
+          insurPeriod: period,
+          start: tcs,
+        });
+        userCurrStart[this] = tcs;
+        userCurrPeriod[this] = period;
+        userCurrCost[this] = amt;
+        userCost[this] = fromSome(userCost[this], 0) + amt;
+        k(newContract);
         return [
           durations,
           correspondingPrice,
@@ -168,7 +158,7 @@ export const main = Reach.App(() => {
           "Wait for the admin to process other cliams"
         );
         assume(
-          lastConsensusSecs() <=
+          thisConsensusSecs() <=
             fromSome(userCurrPeriod[this], 0) +
               fromSome(userCurrStart[this], 0),
           "Your insure period has passed"
@@ -298,6 +288,7 @@ export const main = Reach.App(() => {
           userCurrCost[claimer] = 0;
           userCurrStart[claimer] = 0;
           userCurrPeriod[claimer] = 0;
+          userCurrRequestedProceed[claimer] = 0;
           lastClaimResult[claimer] = false;
           const newClaimers = claimers.set(index, Deployer);
           k(true);

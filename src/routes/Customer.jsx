@@ -17,7 +17,7 @@ import { ctcparse, pretty } from "utils/contract";
 import { toast } from "react-toastify";
 import moment from "moment";
 
-const PROVIDERENV = "LocalHost";
+const PROVIDERENV = "MainNet";
 const reach = loadStdlib("ALGO");
 
 reach.setWalletFallback(
@@ -96,6 +96,8 @@ function Customer() {
   useEffect(() => {
     const getUserProductInfo = async () => {
       try {
+        const bal = await reach.balanceOf(accCustomer, ctcparse(tokenInfo));
+        setTokenBalance(bal.toNumber());
         const data = {
           ...(await runViews([
             ["durations"],
@@ -121,6 +123,11 @@ function Customer() {
           setTotalCost(data.userCost);
           setLastClaimResult(data.lastClaimResult);
         }
+        if (Number(data?.userCurrRequestedProceed) > 0) {
+          setCanPayed(false);
+          setRequestedProceed(data.userCurrRequestedProceed);
+          setIsClaimed(true);
+        }
         if (Number(data?.userCurrStart) + Number(data?.userCurrPeriod) > now) {
           setCurrProduct({
             cost: data.userCurrCost,
@@ -128,10 +135,6 @@ function Customer() {
             period: data.userCurrPeriod,
           });
           setCanPayed(false);
-          if (data.userCurrRequestedProceed > 0) {
-            setRequestedProceed(data.userCurrRequestedProceed);
-            setIsClaimed(true);
-          }
         } else {
           const tmpProducts = [];
           data?.durations?.map((d, i) => {
@@ -205,12 +208,12 @@ function Customer() {
             <p>
               <span className="pr-2 mb-4">Total Cost: </span>$ {totalCost}
             </p>
-            {totalCost > 0 && lastClaimResult ? (
+            {/* {totalCost > 0 ? (
               <p>
                 <span className="pr-2 mb-4">Last Claim Result: </span>
                 {lastClaimResult ? "Approved" : "Declined"}
               </p>
-            ) : null}
+            ) : null} */}
             <p>
               <span className="pr-2 mb-4">Cost: </span>$ {currProduct.cost}
             </p>
@@ -229,27 +232,32 @@ function Customer() {
                   {requestedProceed}
                 </p>
                 <p>Waiting Response from the Admin</p>
-                <div className="mb-4">
-                  <Button
-                    className="mt-3 refresh"
-                    onClick={() => setIsRefreshed(!isRefreshed)}
-                  >
-                    Refresh
-                  </Button>
-                </div>
               </>
             ) : (
               <>
                 <div className="mb-4 form-group">
-                  <label className="float-start"> <strong>Claim Amount: </strong> </label>
-                  <input className="form-control"
+                  <label className="float-start">
+                    <strong>Claim Amount: </strong>
+                  </label>
+                  <input
+                    className="form-control"
                     type="number"
                     onChange={(e) => setClaimAmount(e.target.value)}
                   />
                 </div>
-                <Button className="claim" onClick={() => claim()}>Claim</Button>
+                <Button className="claim" onClick={() => claim()}>
+                  Claim
+                </Button>
               </>
             )}
+            <div className="mb-4">
+              <Button
+                className="mt-3 refresh"
+                onClick={() => setIsRefreshed(!isRefreshed)}
+              >
+                Refresh
+              </Button>
+            </div>
           </div>
         ) : (
           <>
@@ -259,7 +267,7 @@ function Customer() {
             <p>
               <span className="pr-2 mb-4">Total Cost: </span>$ {totalCost}
             </p>
-            {totalCost > 0 && lastClaimResult ? (
+            {totalCost > 0 ? (
               <p>
                 <span className="pr-2">Last Claim Result: </span>
                 {lastClaimResult ? "Approved" : "Declined"}
@@ -267,8 +275,13 @@ function Customer() {
             ) : null}
             <form onSubmit={handleSubmit}>
               <FormControl className="align-items-center">
-                <FormLabel className="float-start align-items-center"><strong style={{color:"black !important"}}>Products:</strong></FormLabel>
-                <RadioGroup className="mb-4"
+                <FormLabel className="float-start align-items-center">
+                  <strong style={{ color: "black !important" }}>
+                    Products:
+                  </strong>
+                </FormLabel>
+                <RadioGroup
+                  className="mb-4"
                   name="products-group"
                   onChange={(e) =>
                     setSelectedProduct(JSON.parse(e.target.value))
@@ -283,7 +296,12 @@ function Customer() {
                     />
                   ))}
                 </RadioGroup>
-                <Button className="pay" sx={{ mt: 1, mr: 1 }} type="submit" variant="outlined">
+                <Button
+                  className="pay"
+                  sx={{ mt: 1, mr: 1 }}
+                  type="submit"
+                  variant="outlined"
+                >
                   Pay
                 </Button>
               </FormControl>
@@ -294,13 +312,21 @@ function Customer() {
         <div className="form-group mb-4">
           <div className="mb-4">
             <label className="float-start">Token Information: </label>
-            <input className="form-control" onChange={(e) => setTokenInfo(e.target.value)} />
+            <input
+              className="form-control"
+              onChange={(e) => setTokenInfo(e.target.value)}
+            />
           </div>
           <div className="mb-4">
             <label className="float-start">Contract Information: </label>
-            <input className="form-control" onChange={(e) => setContractInfo(e.target.value)} />
+            <input
+              className="form-control"
+              onChange={(e) => setContractInfo(e.target.value)}
+            />
           </div>
-          <Button className="connectwallet" onClick={() => connectWallet()}>Connect Wallet</Button>
+          <Button className="connectwallet" onClick={() => connectWallet()}>
+            Connect Wallet
+          </Button>
         </div>
       )}
     </div>

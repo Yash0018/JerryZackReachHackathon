@@ -17,7 +17,7 @@ import { ctcparse, pretty } from "utils/contract";
 import { toast } from "react-toastify";
 import moment from "moment";
 
-const PROVIDERENV = "LocalHost";
+const PROVIDERENV = "MainNet";
 const reach = loadStdlib("ALGO");
 
 reach.setWalletFallback(
@@ -245,7 +245,7 @@ function Deployer() {
           <div id="deployerdetails" className="d-flex justify-content-center">
             {isTokenDeployed ? (
               isContractDeployed ? (
-                <div className="form-group" style={{ width: "450px" }}>
+                <div className="form-group" style={{ width: "500px" }}>
                   <div className="mb-4">
                     <label className="float-start">Token Information: </label>
                     <p>{tokenId}</p>
@@ -258,33 +258,37 @@ function Deployer() {
                     <p>{ctcInfo}</p> <br />
                   </div>
                   <div>
-                    <div className="mb-4">
-                      <label className="float-start">
-                        Customer Account Phrase:{" "}
-                      </label>
-                      <textarea
-                        className="form-control"
-                        cols="50"
-                        onChange={(e) => setCustomerPhrase(e.target.value)}
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="float-start">Amount: </label> <br />
-                      <input
-                        className="form-control"
-                        type="number"
-                        min="1"
-                        onChange={(e) => setTransferAmount(e.target.value)}
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <Button
-                        className="transfertoken"
-                        onClick={() => transferToken()}
-                      >
-                        Transfer Token
-                      </Button>
-                    </div>
+                    {PROVIDERENV === "LocalHost" ? (
+                      <>
+                        <div className="mb-4">
+                          <label className="float-start">
+                            Customer Account Phrase:{" "}
+                          </label>
+                          <textarea
+                            className="form-control"
+                            cols="50"
+                            onChange={(e) => setCustomerPhrase(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="float-start">Amount: </label> <br />
+                          <input
+                            className="form-control"
+                            type="number"
+                            min="1"
+                            onChange={(e) => setTransferAmount(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <Button
+                            className="transfertoken"
+                            onClick={() => transferToken()}
+                          >
+                            Transfer Token
+                          </Button>
+                        </div>
+                      </>
+                    ) : null}
                     <div className="mb-4">
                       <Button
                         className="mt-3 refresh"
@@ -296,7 +300,7 @@ function Deployer() {
                   </div>
                 </div>
               ) : (
-                <div className="form-group" style={{ width: "450px" }}>
+                <div className="form-group" style={{ width: "500px" }}>
                   <div className="mb-4">
                     <label className="float-start">Token Information: </label>
                     <p>{tokenId}</p>
@@ -399,12 +403,18 @@ function Deployer() {
                       </TableCell>
                       <TableCell align="center">{c.duration}</TableCell>
                       <TableCell align="center">
-                        <Button className="approve" onClick={() => approveRequest(c)}>
+                        <Button
+                          className="approve"
+                          onClick={() => approveRequest(c)}
+                        >
                           Approve
                         </Button>
                       </TableCell>
                       <TableCell align="center">
-                        <Button className="decline" onClick={() => declineRequest(c)}>
+                        <Button
+                          className="decline"
+                          onClick={() => declineRequest(c)}
+                        >
                           Decline
                         </Button>
                       </TableCell>
